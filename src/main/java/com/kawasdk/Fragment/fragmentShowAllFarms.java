@@ -179,16 +179,16 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                 if (POLYSELECTED.contains(i)) {
                                     flg = 1;
                                     POLYSELECTED.remove((Integer) i);
-                                    Common.segmentfun(getActivity(), "Farm boundary Selection",
-                                            "boundary selection saved ", MAPBOXMAP, "null", "TAPFARMU");
+                                    Common.segmentEvents(getActivity(), "Farm boundary Selection",
+                                            "deselect", MAPBOXMAP, "null", "FARMSELECTION");
                                 }
                             }
 
                             if (flg == 0) {
                                 POLYSELECTED.add(i);
                                 lineLayer.setProperties(PropertyFactory.lineOpacity(1f));
-                                Common.segmentfun(getActivity(), "Farm boundary Selection",
-                                        "boundary selection saved ", MAPBOXMAP, getSelectedLatLng(), "TAPFARMS");
+                                Common.segmentEvents(getActivity(), "Farm boundary Selection",
+                                        "select", MAPBOXMAP, getSelectedLatLng(), "FARMSELECTION");
 
                             } else {
                                 lineLayer.setProperties(PropertyFactory.lineOpacity(0f));
@@ -218,6 +218,9 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                     if (response.isSuccessful()) {
                         Common.hideLoader();
                         if (response.body() != null) {
+
+                            Common.segmentEvents(getActivity(), "Farm Boundary Response",
+                                    "Farm Boundary Response", MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "TYPEALLCORD");
                             //Log.e("RESPONSE", String.valueOf(response.body()));
                             Common.FARMS_FETCHED_AT = response.body().getData().getFarms_fetched_at();
                             //Log.e("FARMS_FETCHED_AT", Common.FARMS_FETCHED_AT );
@@ -285,7 +288,8 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
             @Override
             public void onFailure(@NonNull Call<PolygonModel> call, @NonNull Throwable t) {
                 Common.hideLoader();
-                //String errorBody = t.getMessage();
+                String errorBody = t.getMessage();
+                Log.e("TAG", "errorBody: "+errorBody );
                 Toast.makeText(getApplicationContext(), getResources().getString(R.string.Error_General), Toast.LENGTH_LONG).show();
             }
         });
@@ -338,7 +342,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                                 lngLat.add(ll);
                                             }
                                         }
-                                        Common.segmentfun(getActivity(), "Save Selection",
+                                        Common.segmentEvents(getActivity(), "Save Selection",
                                                 String.valueOf(selectedFarms), MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "TYPESAVE");
                                         gotoEditPolygon(lngLat);
                                     }
@@ -350,7 +354,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                 if (response.errorBody() != null) {
                                     JSONObject jsonObj = new JSONObject(response.errorBody().string());
                                     Log.e("RESP", jsonObj.getString("error"));
-                                    Common.segmentfun(getActivity(), "Save Selection",
+                                    Common.segmentEvents(getActivity(), "Save Selection",
                                             String.valueOf(selectedFarms), MAPBOXMAP, jsonObj.getString("error"), "TYPESAVEFAIL");
                                     Toast.makeText(getApplicationContext(), jsonObj.getString("error"), Toast.LENGTH_LONG).show();
                                 }
@@ -436,7 +440,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
 
 
     private void startOver() {
-        Common.segmentfun(getActivity(), "Start Over",
+        Common.segmentEvents(getActivity(), "Start Over",
                 "user clicked on Start over", MAPBOXMAP, "", "TYPESTARTOVER");
         fragmentFarmLocation fragmentFarmLocation = new fragmentFarmLocation();
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();

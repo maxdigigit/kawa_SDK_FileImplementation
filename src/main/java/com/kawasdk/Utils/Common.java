@@ -74,7 +74,6 @@ public class Common extends AppCompatActivity {
     public static double MAXZOOM = 22.00;
     public static double MINZOOM = 5.00;
     public static double MAPZOOM = 17.00;
-    public static String LANGUAGE = "en"; // use in fo bahasha lanuage.
     public static ProgressBar PROGRESSBAR;
     public static final String MAPBOX_ACCESS_TOKEN = "pk.eyJ1Ijoia2F3YS1hZG1pbiIsImEiOiJja3RqcmN3N2kwNWEyMzJueWQzd2J0Znk1In0.WK1trBUr51BifsBNRX5ekw"; // MAPBOX TOKEN
     //public static final String MAPBOX_ACCESS_TOKEN = "pk.eyJ1IjoicnVwZXNoamFpbiIsImEiOiJja3JwdmdneGU1NHlxMnpwODN6bzFpbnkwIn0.UgSIBr9ChJFyrAKxtdNf9w"; // OLd MAPBOX TOKEN
@@ -85,10 +84,19 @@ public class Common extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 100;
     public static String FARMS_FETCHED_AT = "";
     public static InterfaceKawaEvents interfaceKawaEvents;
-    public static String PHASERSTR = "3"; //1 - for all functnality with edit 2 - for avoid merge and submit api call 3 - for avoid submit api call
-    public static String SEGMENTKEY = "IKuQjAPnvs0jDZtAj2z52b7yuDrjM1Zm"; // for avoid submit api call
-    public static String USERNAME; // for avoid submit api call
-    public static String USERADDRESS; // for avoid submit api call
+    public static String SEGMENT_KEY = "IKuQjAPnvs0jDZtAj2z52b7yuDrjM1Zm";
+    public static String USER_NAME; // for avoid submit api call
+    public static String USER_ADDRESS; // for avoid submit api call
+    public static String USER_COMPANY; // for avoid submit api call
+
+    //1 - for all functnality with edit
+    // 2 - for avoid merge and submit api call
+    // 3 - for avoid submit api call
+    // 4 - for merge api and address api
+    public static String PHASERSTR = "3";
+    // 'in' for bahasha lanuage.
+    // 'en' for english lanuage.
+    public static String LANGUAGE = "en";
 
     public Common(Context context) {
         this.context = context;
@@ -181,24 +189,33 @@ public class Common extends AppCompatActivity {
         String previousvisibleRegion = getVisibleRegion(MAPBOXMAP);
         String visibleRegion = "";
         Properties properties = new Properties();
-
+        String fildsInformation = getFiledsDetails();
         Log.e("zoomleval", String.valueOf(zoomleval));
-        if (val == 1.0 && zoomleval >= 2 && zoomleval < 3) {  zoomleval = 3.1; }
+        if (val == 1.0 && zoomleval >= 2 && zoomleval < 3) {
+            zoomleval = 3.1;
+        }
         if (zoomleval > 3) {
             MAPBOXMAP.animateCamera(CameraUpdateFactory.newLatLngZoom(cameraPosition.target, zoomleval + val), 1000);
             visibleRegion = getVisibleRegion(MAPBOXMAP);
             zoomleval = zoomleval + val;
         }
-        String jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + "Zoom leval saved" + "\"" + ",\"previousCoordinates\":{\"lat\":" + "\"" +
-                previousLat + "\"" + ",\"long\":" + "\"" + previousLng + "\"" + "},\"currentCoordinates\":{\"lat\":" + "\"" +
-                CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"previousViewport\": " +
-                previousvisibleRegion + ", \"currentViewport\": " + visibleRegion + ",\"previousZoom\": " + previouszoomleval + ",\"currentZoom\": " + zoomleval + "}}";
-        JsonObject jsonObject = JsonParser.parseString(jString).getAsJsonObject();
-        properties.putValue("data", jsonObject);
-        Log.e("TAG", "segmentInit: " + properties);
-        String zoomType = "";
-        if(val == 1.0) { zoomType = "Zoom in"; } else { zoomType = "Zoom out"; }
-        Analytics.with(context).track(zoomType, properties);
+        if (KawaMap.SEGMENT_API_KEY != "" && KawaMap.SEGMENT_API_KEY != null) {
+            String jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + "Zoom leval saved" + "\"" + ",\"previousCoordinates\":{\"lat\":" + "\"" +
+                    previousLat + "\"" + ",\"long\":" + "\"" + previousLng + "\"" + "},\"currentCoordinates\":{\"lat\":" + "\"" +
+                    CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"previousViewport\": " +
+                    previousvisibleRegion + ", \"currentViewport\": " + visibleRegion + ",\"previousZoom\": " + previouszoomleval + ",\"currentZoom\": " + zoomleval + "}}";
+            Log.e("TAG", "segmentInit: " + jString);
+            JsonObject jsonObject = JsonParser.parseString(jString).getAsJsonObject();
+            properties.putValue("data", jsonObject);
+
+            String zoomType = "";
+            if (val == 1.0) {
+                zoomType = "Zoom in";
+            } else {
+                zoomType = "Zoom out";
+            }
+            Analytics.with(context).track(zoomType, properties);
+        }
     }
 
     public static void lockZoom(MapboxMap MAPBOXMAP) {
@@ -284,8 +301,11 @@ public class Common extends AppCompatActivity {
 
     public void setLocale(Activity context) {
         Log.e("TAG", "setLocale: ");
-
-        String languageToLoad = LANGUAGE; // your language
+        String languageToLoad = "en";
+        if (KawaMap.isBahasaEnable) {
+            languageToLoad = "in";
+        }
+        // your language
         Locale locale = new Locale(languageToLoad);
         Locale.setDefault(locale);
         Configuration config = new Configuration();
@@ -303,11 +323,9 @@ public class Common extends AppCompatActivity {
             return false;
         }
     }
-
     public static void requestFileManagerPermission() {
         ActivityCompat.requestPermissions((Activity) context, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -335,7 +353,6 @@ public class Common extends AppCompatActivity {
         }
 
         Smartlook.trackCustomEvent(eventName, props);
-
     }
 
     public static String getVisibleRegion(MapboxMap mapboxMap) {
@@ -349,65 +366,75 @@ public class Common extends AppCompatActivity {
         return vRegionStr;
     }
 
-    public static void segmentfun(Context context, String eventname, String message, MapboxMap mapboxMap, String responsemsg, String type) {
+    public static String getFiledsDetails() {
+        String fildsStr;
+        if (USER_NAME == null && USER_ADDRESS == null) {
+            fildsStr = "{\"user\":{}";
+        } else if (USER_COMPANY != null) {
+            fildsStr = "{\"user\":{\"name\":" + "\"" + USER_NAME + "\"" + ",\"address\":" + "\"" + USER_ADDRESS + "\"" + "}";
+        } else {
+            fildsStr = "{\"user\":{\"name\":" + "\"" + USER_NAME + "\"" + ",\"address\":" + "\"" + USER_ADDRESS + "\"" + ",\"company\":" + "\"" + USER_COMPANY + "\"" + "}";
+        }
+        return fildsStr;
+    }
+
+    public static void segmentEvents(Context context, String eventname, String message, MapboxMap mapboxMap, String responsemsg, String eventType) {
         String jString = "";
         Properties properties = new Properties();
         String visibleRegion = getVisibleRegion(mapboxMap);
-        switch (type) {
-            case "GPS":
-                // String visibleRegion = getVisibleRegion(mapboxMap);
-                Log.e("TAG", "visibleRegion>> " + visibleRegion);
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ", \"viewport\": "
-                        + visibleRegion + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}}  }";
-                break;
-            case "SEARCH":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"query\":" + "\"" + responsemsg + "\"" + ", \"tappedResult\":{ \"name\":" +
-                        "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}}  }}";
-                break;
-            case "GETFARM":
-                //String visibleRegion = getVisibleRegion(mapboxMap);
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"response\":" + "\"" + responsemsg + "\"}}";
-                break;
-            case "TAPFARMS":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"coordinates\":" + responsemsg + ",\"eventType\":\"select\"}}";
-                break;
-            case "TAPFARMU":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"coordinates\":" + responsemsg + ",\"eventType\":\"deselect\"}}";
-                break;
-            case "TYPESAVE":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + "Selection Data Saved" + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"resultantFamrs\":" + message + ",\"mergeAPI\":{\"message\":\"Data save on success\",\"response\":" + responsemsg + "}}}";
-                break;
-            case "TYPESAVEFAIL":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + "Selection Data Saved" + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"resultantFamrs\":" + message + ",\"mergeAPI\":{\"message\":\"Data saved on failure\",\"error\":" + responsemsg + "}}}";
-                break;
-            case "TYPEADDMORE":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + "}}";
-                break;
-            case "TYPESAVEDETAILS":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
-                        visibleRegion + ",\"resultantFamrs\":" + responsemsg + "}}";
-                break;
-            case "TYPESTARTOVER":
-            case "TYPEMARKANOTHER":
-                jString = "{\"user\":{\"name\":" + "\"" + USERNAME + "\"" + ",\"address\":" + "\"" + USERADDRESS + "\"" + "},\"metadata\":{\"message\":" + "\"" + message + "\"" + "}}";
-                break;
+        String fildsInformation = getFiledsDetails();
+        if (KawaMap.SEGMENT_API_KEY != "" && KawaMap.SEGMENT_API_KEY != null) {
 
-        }
-        try {
-            JsonObject jsonObject = JsonParser.parseString(jString).getAsJsonObject();
-            properties.putValue("data", jsonObject);
-            Log.e("TAG", "segmentInit: " + properties);
-            Analytics.with(context).track(eventname, properties);
-        }
-        catch (Exception e){
-            Log.e("catch-error", String.valueOf(e.getMessage()));
-            Toast.makeText(context,String.valueOf(e.getMessage()),Toast.LENGTH_LONG).show();
+            switch (eventType) {
+                case "CURRENT_LOC":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + ", \"viewport\": "
+                            + visibleRegion + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}}  }";
+                    break;
+                case "SEARCH":
+                    jString = fildsInformation + ",\"metadata\":{\"query\":" + "\"" + responsemsg + "\"" + ", \"tappedResult\":{ \"name\":" +
+                            "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}}  }}";
+                    break;
+                case "GET_FARMS":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + ",\"response\":" + "\"" + responsemsg + "\"}}";
+                    break;
+                case "FARMS_SELECTION":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + "boundary selection saved " + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + ",\"coordinates\":" + responsemsg + ",\"eventType\":" + message + "}}";
+                    break;
+                case "SAVE_ON_SUCCESS":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + "Selection Data Saved" + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + ",\"resultantFarms\":" + message + ",\"mergeAPI\":{\"message\":\"Data save on success\",\"response\":" + responsemsg + "}}}";
+                    break;
+                case "SAVE_ON_FAILURE":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + "Selection Data Saved" + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + ",\"resultantFarms\":" + message + ",\"mergeAPI\":{\"message\":\"Data saved on failure\",\"error\":" + responsemsg + "}}}";
+                    break;
+                case "ADD_MORE_PLOTS":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + "}}";
+                    break;
+                case "SAVE_DETAILS":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"coordinates\":{\"lat\":" + "\"" + CAMERALAT + "\"" + ",\"long\":" + "\"" + CAMERALNG + "\"" + "}, \"viewport\": " +
+                            visibleRegion + ",\"resultantFarms\":" + responsemsg + "}}";
+                    break;
+                case "START_OVER":
+                case "MARK_ANOTHER_PLOTS":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + "}}";
+                    break;
+                case "GET_ALL_POLYGON_DATA":
+                    jString = fildsInformation + ",\"metadata\":{\"message\":" + "\"" + message + "\"" + ",\"api_response\":" + responsemsg + "}}";
+                    break;
+            }
+            Log.e("TAG", "segmentInit: " + jString);
+            try {
+                JsonObject jsonObject = JsonParser.parseString(jString).getAsJsonObject();
+                properties.putValue("data", jsonObject);
+                Log.e("TAG", "segment>>: " + properties);
+                Analytics.with(context).track(eventname, properties);
+            } catch (Exception e) {
+                Toast.makeText(context, String.valueOf(e.getMessage()), Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
