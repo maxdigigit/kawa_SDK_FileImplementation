@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import static com.mapbox.mapboxsdk.Mapbox.getApplicationContext;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -22,12 +24,12 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.kawasdk.Model.Boundary;
 import com.kawasdk.Model.MergeModel;
-import com.kawasdk.Model.PolygonModel;
 import com.kawasdk.Model.ResponseKawa;
-import com.kawasdk.R;
 import com.kawasdk.Utils.Common;
+import com.kawasdk.Model.Boundary;
+import com.kawasdk.Model.PolygonModel;
+import com.kawasdk.R;
 import com.kawasdk.Utils.InterfaceKawaEvents;
 import com.kawasdk.Utils.KawaMap;
 import com.kawasdk.Utils.ServiceManager;
@@ -38,6 +40,7 @@ import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.VisibleRegion;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -56,8 +59,6 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static com.mapbox.mapboxsdk.Mapbox.getApplicationContext;
 
 public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback, MapboxMap.OnMapClickListener {
     private MapboxMap MAPBOXMAP;
@@ -180,7 +181,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                     flg = 1;
                                     POLYSELECTED.remove((Integer) i);
                                     Common.segmentEvents(getActivity(), "Farm boundary Selection",
-                                            "deselect", MAPBOXMAP, "null", "FARMSELECTION");
+                                            "deselect", MAPBOXMAP, "null", "FARMS_SELECTION");
                                 }
                             }
 
@@ -188,7 +189,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                 POLYSELECTED.add(i);
                                 lineLayer.setProperties(PropertyFactory.lineOpacity(1f));
                                 Common.segmentEvents(getActivity(), "Farm boundary Selection",
-                                        "select", MAPBOXMAP, getSelectedLatLng(), "FARMSELECTION");
+                                        "select", MAPBOXMAP, getSelectedLatLng(), "FARMS_SELECTION");
 
                             } else {
                                 lineLayer.setProperties(PropertyFactory.lineOpacity(0f));
@@ -220,7 +221,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                         if (response.body() != null) {
 
                             Common.segmentEvents(getActivity(), "Farm Boundary Response",
-                                    "Farm Boundary Response", MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "TYPEALLCORD");
+                                    "Farm Boundary Response", MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "GET_ALL_POLYGON_DATA");
                             //Log.e("RESPONSE", String.valueOf(response.body()));
                             Common.FARMS_FETCHED_AT = response.body().getData().getFarms_fetched_at();
                             //Log.e("FARMS_FETCHED_AT", Common.FARMS_FETCHED_AT );
@@ -297,7 +298,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
 
     private void getMergedCordinates() throws JSONException {
         if (POLYSELECTED.size() > 0) {
-            if (Common.PHASERSTR.equals("1") || Common.PHASERSTR.equals("3")) {
+            if (Common.PHASERSTR.equals("1") || Common.PHASERSTR.equals("3")|| Common.PHASERSTR.equals("4")) {
                 List<String> listFeatures = new ArrayList<>();
                 for (int i = 0; i < POLYSELECTED.size(); i++) {
                     List<List<Point>> llPtsA = new ArrayList<>();
@@ -343,7 +344,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
                                             }
                                         }
                                         Common.segmentEvents(getActivity(), "Save Selection",
-                                                String.valueOf(selectedFarms), MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "TYPESAVE");
+                                                String.valueOf(selectedFarms), MAPBOXMAP, String.valueOf(new Gson().toJson(response.body())), "SAVE_ON_SUCCESS");
                                         gotoEditPolygon(lngLat);
                                     }
                                     //Log.e("lngLat-a", String.valueOf(lngLat));
@@ -441,7 +442,7 @@ public class fragmentShowAllFarms extends Fragment implements OnMapReadyCallback
 
     private void startOver() {
         Common.segmentEvents(getActivity(), "Start Over",
-                "user clicked on Start over", MAPBOXMAP, "", "TYPESTARTOVER");
+                "user clicked on Start over", MAPBOXMAP, "", "START_OVER");
         fragmentFarmLocation fragmentFarmLocation = new fragmentFarmLocation();
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

@@ -601,7 +601,7 @@ public class fragmentEditFarmBoundries extends Fragment implements OnMapReadyCal
         if (Common.PHASERSTR.equals("1")) {
             correctBoundryBtn.setVisibility(VIEW.VISIBLE);
             completeMarkingBtn.setVisibility(VIEW.VISIBLE);
-        } else if (Common.PHASERSTR.equals("2") || Common.PHASERSTR.equals("3")) {
+        } else if (Common.PHASERSTR.equals("2") || Common.PHASERSTR.equals("3")|| Common.PHASERSTR.equals("4")) {
             saveDetailBtn.setVisibility(VIEW.VISIBLE);
         }
 
@@ -734,7 +734,7 @@ public class fragmentEditFarmBoundries extends Fragment implements OnMapReadyCal
             Log.e("listFeatures", String.valueOf(listFeatures));
             JsonObject submitJsonObject = JsonParser.parseString(STRSUBMIT).getAsJsonObject();
         Common.segmentEvents(getActivity(), "Save Details",
-                "Data saved on save details", MAPBOXMAP, STRSUBMIT, "TYPESAVEDETAILS");
+                "Data saved on save details", MAPBOXMAP, STRSUBMIT, "SAVE_DETAILS");
             try {
                 geoJsonObject.put("geojson", submitJsonObject);
                 String str = "{\"api_response\":" + String.valueOf(geoJsonObject) + "}";
@@ -818,10 +818,10 @@ public class fragmentEditFarmBoundries extends Fragment implements OnMapReadyCal
         if(eventname.equals("Mark_another"))
         {
             Common.segmentEvents(getActivity(), "Mark another Farm",
-                    "User clicked on Mark another Farm", MAPBOXMAP, "", "TYPEMARKANOTHER");
+                    "User clicked on Mark another Farm", MAPBOXMAP, "", "MARK_ANOTHER_PLOTS");
         }else {
             Common.segmentEvents(getActivity(), "Start Over",
-                    "user clicked on Start over", MAPBOXMAP, "", "TYPESTARTOVER");
+                    "user clicked on Start over", MAPBOXMAP, "", "START_OVER");
         }
         fragmentFarmLocation fragmentFarmLocation = new fragmentFarmLocation();
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
@@ -1028,7 +1028,7 @@ public class fragmentEditFarmBoundries extends Fragment implements OnMapReadyCal
 
     public void onBackPressed() {
         Common.segmentEvents(getActivity(), "Add more plots",
-                "Data saved on add more plots", MAPBOXMAP, "", "TYPEADDMORE");
+                "Data saved on add more plots", MAPBOXMAP, "", "ADD_MORE_PLOTS");
         getActivity().getSupportFragmentManager().popBackStack();
     }
 }
